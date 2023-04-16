@@ -1,4 +1,5 @@
 import 'package:file_cosmos/screens/login_screen/login_screen.dart';
+import 'package:file_cosmos/screens/main_screen/main_screen.dart';
 import 'package:file_cosmos/screens/map_screen/map_screen.dart';
 import 'package:file_cosmos/screens/upload_screen/upload_screen.dart';
 import 'package:file_cosmos/services/auth_service.dart';
@@ -49,7 +50,7 @@ class MyApp extends StatelessWidget {
               if (user == null) {
                 return const LoginScreen();
               }
-              return const UploadScreen();
+              return const MainScreen();
             }
             return const UploadScreen();
           }),
