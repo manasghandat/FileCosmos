@@ -1,25 +1,18 @@
-import 'package:file_cosmos/screens/map_screen/map_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-import 'screens/login_screen/login_screen.dart';
+import 'screens/main_screen/main_screen.dart';
+import 'screens/receive_screen/receive_screen.dart';
 
-void main() {
-  runApp(const MyApp());
-}
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+void main() => runApp(MyApp());
 
-  // This widget is the root of your application.
+class MyApp extends StatelessWidget{
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const MapScreen(),
+  Widget build(BuildContext context){
+    return const MaterialApp(
+      title: 'File Transfer',
+      home: MainScreen(),
     );
   }
 }
-
