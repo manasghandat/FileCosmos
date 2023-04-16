@@ -37,11 +37,12 @@ dependencies:
   cupertino_icons: ^1.0.2
   flutter_svg: ^2.0.4
   mapbox_gl: ^0.16.0
-  dotted_border: ^2.0.0+3
+  google_fonts: ^4.0.3
   file_picker: ^5.2.9
   firebase_core: ^2.9.0
   firebase_auth: ^4.4.1
   google_sign_in: ^6.1.0
+  dotted_border: ^2.0.0+3
 
 dev_dependencies:
   flutter_test:

@@ -49,7 +49,7 @@ class MyApp extends StatelessWidget {
               if (user == null) {
                 return const LoginScreen();
               }
-              return const MapScreen();
+              return const UploadScreen();
             }
             return const UploadScreen();
           }),

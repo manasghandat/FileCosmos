@@ -5,8 +5,6 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter/src/widgets/placeholder.dart';
 
 class UploadScreen extends StatefulWidget {
   const UploadScreen({super.key});
@@ -72,7 +70,10 @@ class _UploadScreenState extends State<UploadScreen> {
                   ),
                   child: _isLoading? const CircularProgressIndicator() : ElevatedButton(
                     onPressed: () {
+                      setState(() {
+
                       _isLoading = true;
+                      });
                       _pickFiles();
                     },
                     style: ButtonStyle(
