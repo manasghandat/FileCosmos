@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "872035218234",
+    "project_id": "location-based-file-sharing",
+    "storage_bucket": "location-based-file-sharing.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:872035218234:android:a3a0f293219ea16f155603",
+        "android_client_info": {
+          "package_name": "com.example.file_cosmos"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "872035218234-38932t91fq39brsrcmnbj8i17st3vbco.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBN7QYwdERQfag5ILoRTDHsGRYP2u411-c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "872035218234-38932t91fq39brsrcmnbj8i17st3vbco.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
