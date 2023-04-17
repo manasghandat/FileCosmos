@@ -1,8 +1,7 @@
-package get_file
+package file
 
 import (
 	"context"
-	"encoding/json"
 	"io/ioutil"
 
 	"cloud.google.com/go/storage"
@@ -56,19 +55,4 @@ func GetFile(bucketName, objectName string) (*File, error) {
 	}
 
 	return file, nil
-}
-
-func main() {
-	// Example usage
-	file, err := GetFile("location-based-file-sharing.appspot.com", "Prog.txt")
-	if err != nil {
-		panic(err)
-	}
-
-	// Convert the file struct to JSON and print it to the console
-	data, err := json.Marshal(file)
-	if err != nil {
-		panic(err)
-	}
-	println(string(data))
 }

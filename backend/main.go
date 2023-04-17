@@ -5,10 +5,15 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"net/http"
-	"ooad/create_user"
-	"ooad/get_file"
 	"log"
+	"net/http"
+	"ooad/file"
+	"ooad/user"
+	"ooad/models"
+	// "ooad/create_user"
+	// "ooad/get_file"
+	// "ooad/get_user"
+	// "ooad/file"
 
 	firebase "firebase.google.com/go/v4"
 	"google.golang.org/api/option"
@@ -59,7 +64,7 @@ func main() {
 			objectName := "Prog.txt"
 
 			// Get the file from Firebase Storage
-			file, err := get_file.GetFile(bucketName, objectName)
+			file, err := file.GetFile(bucketName, objectName)
 			if err != nil {
 				panic(err)
 			}
@@ -81,14 +86,28 @@ func main() {
 		// Start the HTTP server to create a user
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			// Decode the request body into a User struct
-			user := create_user.User{
-				Name:  "Jalil Grover",
-				Email: "lavdakaemail@keksite.in",
-				Age:   69,
+			userJson := models.User{
+				Name:  "Chutiya",
+				ID: "0X69",
+				Email: "kek@gmail.com",
+				Ufiles: []map[string]string{
+					{
+						"id":"0x1234",
+						"location" : "cada",
+						"name" : "Kekname",
+					},
+				},
+				Dfiles: []map[string]string{
+					{
+						"id":"0x1234",
+						"location" : "cada",
+						"name" : "Kekname",
+					},
+				},
 			}
 			
 			// Create the user in Firestore
-			err = create_user.CreateUser(ctx, client, user)
+			err = user.CreateUser(ctx, client, userJson)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return

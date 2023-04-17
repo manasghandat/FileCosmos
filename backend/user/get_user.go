@@ -1,4 +1,4 @@
-package get_user
+package user
 
 import (
 	"context"
@@ -16,7 +16,7 @@ type User struct {
 
 func main() {
 	ctx := context.Background()
-	opt := option.WithCredentialsFile("../../backend/location-based-file-sharing-firebase-adminsdk-tzvgx-fb430b4173.json")
+	opt := option.WithCredentialsFile("../location-based-file-sharing-firebase-adminsdk-tzvgx-fb430b4173.json")
 	app, err := firebase.NewApp(ctx, nil, opt)
 	if err != nil {
 		log.Fatalf("error initializing app: %v\n", err)
