@@ -3,7 +3,7 @@ package get_user
 import (
 	"context"
 	"log"
-
+	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
 	"google.golang.org/api/option"
 )
@@ -12,6 +12,22 @@ type User struct {
 	Name  string `firestore:"name"`
 	Age   int    `firestore:"age"`
 	Email string `firestore:"email"`
+}
+func GetUser(ctx context.Context, client *firestore.Client, name string) (User, error) {
+	var user User
+
+	// Retrieve the user from the "users" collection in Firestore
+	doc, err := client.Collection("users").Doc(name).Get(ctx)
+	if err != nil {
+		return User{}, err
+	}
+
+	// Unmarshal the document data into a User struct
+	if err := doc.DataTo(&user); err != nil {
+		return User{}, err
+	}
+
+	return user, nil
 }
 
 func main() {

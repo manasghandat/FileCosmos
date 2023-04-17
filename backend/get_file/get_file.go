@@ -17,7 +17,7 @@ type File struct {
 func GetFile(bucketName, objectName string) (*File, error) {
 	// Initialize a Google Cloud Storage client
 	ctx := context.Background()
-	client, err := storage.NewClient(ctx, option.WithCredentialsFile("/home/abhyuday/Desktop/FileCosmos/backend/location-based-file-sharing-firebase-adminsdk-tzvgx-fb430b4173.json"))
+	client, err := storage.NewClient(ctx, option.WithCredentialsFile("../backend/location-based-file-sharing-firebase-adminsdk-tzvgx-fb430b4173.json"))
 	if err != nil {
 		return nil, err
 	}

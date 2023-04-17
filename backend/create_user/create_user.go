@@ -13,7 +13,7 @@ import (
 type User struct {
 	Name         string
 	Age          int
-	EmailAddress string
+	Email string
 }
 
 func main() {
@@ -36,7 +36,7 @@ func main() {
 	user := User{
 		Name:         "John Doe",
 		Age:          30,
-		EmailAddress: "johndoe@example.com",
+		Email: "johndoe@example.com",
 	}
 
 	// Add the user to the "users" collection in Firestore
@@ -52,7 +52,7 @@ func main() {
 	}
 
 	// Print the user's details
-	fmt.Printf("Name: %s\nAge: %d\nEmailAddress: %s\n", user.Name, user.Age, user.EmailAddress)
+	fmt.Printf("Name: %s\nAge: %d\nEmailAddress: %s\n", user.Name, user.Age, user.Email)
 }
 
 func CreateUser(ctx context.Context, client *firestore.Client, user User) error {
