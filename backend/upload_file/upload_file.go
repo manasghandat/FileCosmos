@@ -1,12 +1,42 @@
 package upload_file
-
 import (
 	"context"
-	"io/ioutil"
+	"fmt"
 	"log"
+	"io/ioutil"
 	"cloud.google.com/go/storage"
 	"google.golang.org/api/option"
 )
+
+func UploadFile(bucketName, objectName string, data []byte) error {
+	// Initialize a Google Cloud Storage client
+	ctx := context.Background()
+	client, err := storage.NewClient(ctx, option.WithCredentialsFile("../backend/location-based-file-sharing-firebase-adminsdk-tzvgx-fb430b4173.json"))
+	if err != nil {
+		return err
+	}
+
+	// Get the bucket
+	bucket := client.Bucket(bucketName)
+
+	// Create a writer for the object
+	object := bucket.Object(objectName)
+	writer := object.NewWriter(ctx)
+
+	// Write the file data to the object
+	if _, err := writer.Write(data); err != nil {
+		return err
+	}
+
+	// Close the writer to save the object
+	if err := writer.Close(); err != nil {
+		return err
+	}
+
+	fmt.Printf("File uploaded to server://%s/%s\n", bucketName, objectName)
+
+	return nil
+}
 
 func main() {
 	ctx := context.Background()
@@ -25,14 +55,14 @@ func main() {
 	bucket := client.Bucket(bucketName)
 
 	// Read file contents
-	filePath := "/home/abhyuday/Desktop/ooad/Input.txt"
+	filePath := "../ooad/nput.txt"
 	fileContents, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		log.Fatalf("error reading file: %v", err)
 	}
 
 	// Upload file to bucket with specified name
-	objectName := "Input.txt"
+	objectName := "nput.txt"
 	wc := bucket.Object(objectName).NewWriter(ctx)
 	if _, err = wc.Write(fileContents); err != nil {
 		log.Fatalf("error writing file to bucket: %v", err)
