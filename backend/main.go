@@ -10,22 +10,16 @@ import (
 	"ooad/file"
 	"ooad/user"
 	"ooad/models"
-	// "ooad/create_user"
-	// "ooad/get_file"
-	// "ooad/get_user"
-	// "ooad/file"
 
 	firebase "firebase.google.com/go/v4"
 	"google.golang.org/api/option"
-	// "cloud.google.com/go/firestore"
-	// "google.golang.org/api/option"
+	"cloud.google.com/go/storage"
+
 )
 
 
 func main() {
 	// Parse command-line arguments
-	getFiles := flag.Bool("g", false, "Get files from Firebase Storage")
-	createUser := flag.Bool("c", false, "Create a user in Firestore")
 	port := flag.String("p", "8080", "HTTP server port")
 	flag.Parse()
 
@@ -43,83 +37,80 @@ func main() {
 		"auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
 		"client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-tzvgx%40location-based-file-sharing.iam.gserviceaccount.com"
 	  }
-	  `))
+	`))
 	app, err := firebase.NewApp(ctx, nil, opt)
 	if err != nil {
 		log.Fatalf("error initializing app: %v", err)
 	}
 
 	// Get a Firestore client
-	client, err := app.Firestore(ctx)
+	firestoreClient, err := app.Firestore(ctx)
 	if err != nil {
 		log.Fatalf("error getting Firestore client: %v", err)
 	}
-	defer client.Close()
+	defer firestoreClient.Close()
 
-	// Execute the selected operation
-	if *getFiles {
-		// Start the HTTP server to get files
-		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			bucketName := "location-based-file-sharing.appspot.com"
-			objectName := "Prog.txt"
-
-			// Get the file from Firebase Storage
-			file, err := file.GetFile(bucketName, objectName)
-			if err != nil {
-				panic(err)
-			}
-
-			// Convert the file struct to JSON and write it to the response writer
-			data, err := json.Marshal(file)
-			if err != nil {
-				panic(err)
-			}
-			w.Header().Set("Content-Type", "application/json")
-			w.Write(data)
-		})
-
-		fmt.Println("Starting HTTP server to get files...")
-		http.ListenAndServe(fmt.Sprintf(":%s", *port), nil)
-	} else if *createUser {
-		// Define the user data
-		// var user User
-		// Start the HTTP server to create a user
-		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			// Decode the request body into a User struct
-			userJson := models.User{
-				Name:  "Chutiya",
-				ID: "0X69",
-				Email: "kek@gmail.com",
-				Ufiles: []map[string]string{
-					{
-						"id":"0x1234",
-						"location" : "cada",
-						"name" : "Kekname",
-					},
-				},
-				Dfiles: []map[string]string{
-					{
-						"id":"0x1234",
-						"location" : "cada",
-						"name" : "Kekname",
-					},
-				},
-			}
-			
-			// Create the user in Firestore
-			err = user.CreateUser(ctx, client, userJson)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			// Write a success message to the response writer
-			w.Header().Set("Content-Type", "text/plain")
-			fmt.Fprintln(w, "User created successfully")
-		})
-
-		fmt.Println("Starting HTTP server to create a user...")
-		http.ListenAndServe(fmt.Sprintf(":%s", *port), nil)
-	} else {
-		fmt.Println("Please specify an operation with the -getfiles or -createuser flag.")
+	fileClient, err := storage.NewClient(ctx,opt)
+	if err != nil {
+		log.Fatalf("error getting storage client: %v", err)
 	}
+	defer fileClient.Close()
+
+	// Start the HTTP server to get files
+	http.HandleFunc("/getFile", func(w http.ResponseWriter, r *http.Request) {
+		
+		objectName := "Prog.txt"
+
+		// Get the file from Firebase Storage
+		file, err := file.GetFile(ctx,fileClient,objectName)
+		if err != nil {
+			panic(err)
+		}
+
+		// Convert the file struct to JSON and write it to the response writer
+		data, err := json.Marshal(file)
+		if err != nil {
+			panic(err)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(data)
+	})
+
+	// Start the HTTP server to create a user
+	http.HandleFunc("/createUser", func(w http.ResponseWriter, r *http.Request) {
+		// Decode the request body into a User struct
+		userJson := models.User{
+			Name:  "Ak",
+			ID: "0X69",
+			Email: "kek@gmail.com",
+			Ufiles: []map[string]string{
+				{
+					"id":"0x1234",
+					"location" : "cada",
+					"name" : "Kekname",
+				},
+			},
+			Dfiles: []map[string]string{
+				{
+					"id":"0x1234",
+					"location" : "cada",
+					"name" : "Kekname",
+				},
+			},
+		}
+		
+		// Create the user in Firestore
+		err = user.CreateUser(ctx, firestoreClient, userJson)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		// Write a success message to the response writer
+		w.Header().Set("Content-Type", "text/plain")
+		fmt.Fprintln(w, "User created successfully")
+	})
+
+	fmt.Printf("Starting HTTP server\nhttps://127.0.0.1:%s\n",*port)
+	http.ListenAndServe(fmt.Sprintf(":%s", *port), nil)
+
 }
