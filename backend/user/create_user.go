@@ -3,12 +3,8 @@ package user
 import (
 	"ooad/models"
 	"context"
-	// "fmt"
-	// "log"
 
 	"cloud.google.com/go/firestore"
-	// firebase "firebase.google.com/go"
-	// "google.golang.org/api/option"
 )
 
 

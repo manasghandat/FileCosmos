@@ -59,7 +59,7 @@ func main() {
 	// Start the HTTP server to get files
 	http.HandleFunc("/getFile", func(w http.ResponseWriter, r *http.Request) {
 		
-		objectName := "Prog.txt"
+		objectName := "rolf.txt"
 
 		// Get the file from Firebase Storage
 		file, err := file.GetFile(ctx,fileClient,objectName)
@@ -74,6 +74,20 @@ func main() {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(data)
+	})
+
+	http.HandleFunc("/uploadFile",func(w http.ResponseWriter, r *http.Request) {
+		filePath := "../kek.txt"
+		objectName := "rolf.txt"
+
+		err = file.UploadFile(ctx,fileClient,filePath,objectName)
+		if err!=nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "text/plain")
+		fmt.Fprintln(w, "File uploaded successfully")
 	})
 
 	// Start the HTTP server to create a user
@@ -108,6 +122,25 @@ func main() {
 		// Write a success message to the response writer
 		w.Header().Set("Content-Type", "text/plain")
 		fmt.Fprintln(w, "User created successfully")
+	})
+
+	http.HandleFunc("/getUser",func(w http.ResponseWriter, r *http.Request) {
+		var userJson models.User
+		var username = "Ak"
+
+		userJson, err = user.GetUser(ctx,firestoreClient,username)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return	
+		}
+		
+		data, err := json.Marshal(userJson)
+		if err != nil {
+			panic(err)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(data)
 	})
 
 	fmt.Printf("Starting HTTP server\nhttps://127.0.0.1:%s\n",*port)
