@@ -3,14 +3,13 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
+	"io/ioutil"
 	"ooad/file"
 	"ooad/user"
 	"ooad/models"
-
 	firebase "firebase.google.com/go/v4"
 	"google.golang.org/api/option"
 	"cloud.google.com/go/storage"
@@ -19,10 +18,6 @@ import (
 
 
 func main() {
-	// Parse command-line arguments
-	port := flag.String("p", "8080", "HTTP server port")
-	flag.Parse()
-
 	// Initialize the Firebase app
 	ctx := context.Background()
 	opt := option.WithCredentialsJSON([]byte(`{
@@ -38,6 +33,7 @@ func main() {
 		"client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-tzvgx%40location-based-file-sharing.iam.gserviceaccount.com"
 	  }
 	`))
+
 	app, err := firebase.NewApp(ctx, nil, opt)
 	if err != nil {
 		log.Fatalf("error initializing app: %v", err)
@@ -49,6 +45,7 @@ func main() {
 		log.Fatalf("error getting Firestore client: %v", err)
 	}
 	defer firestoreClient.Close()
+	
 
 	fileClient, err := storage.NewClient(ctx,opt)
 	if err != nil {
@@ -59,16 +56,34 @@ func main() {
 	// Start the HTTP server to get files
 	http.HandleFunc("/getFile", func(w http.ResponseWriter, r *http.Request) {
 		
-		objectName := "rolf.txt"
+		// Read the request body
 
-		// Get the file from Firebase Storage
-		file, err := file.GetFile(ctx,fileClient,objectName)
+		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			panic(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprint(w, "Failed to read request body")
+			return
+		}
+		
+		// get a feild cord from body
+		var cordinate models.Cordinate
+		
+		err = json.Unmarshal(body, &cordinate)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		
+		files, err := file.GetFile(ctx, cordinate.Cord,firestoreClient)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
+		fmt.Println(files)
+
 		// Convert the file struct to JSON and write it to the response writer
-		data, err := json.Marshal(file)
+		data, err := json.Marshal(files)
 		if err != nil {
 			panic(err)
 		}
@@ -77,42 +92,24 @@ func main() {
 	})
 
 	http.HandleFunc("/uploadFile",func(w http.ResponseWriter, r *http.Request) {
-		filePath := "../kek.txt"
-		objectName := "rolf.txt"
-
-		err = file.UploadFile(ctx,fileClient,filePath,objectName)
-		if err!=nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "text/plain")
-		fmt.Fprintln(w, "File uploaded successfully")
+		s := file.UploadFile(w,r,ctx,fileClient)
+		fmt.Println(s)
 	})
 
 	// Start the HTTP server to create a user
 	http.HandleFunc("/createUser", func(w http.ResponseWriter, r *http.Request) {
 		// Decode the request body into a User struct
-		userJson := models.User{
-			Name:  "Ak",
-			ID: "0X69",
-			Email: "kek@gmail.com",
-			Ufiles: []map[string]string{
-				{
-					"id":"0x1234",
-					"location" : "cada",
-					"name" : "Kekname",
-				},
-			},
-			Dfiles: []map[string]string{
-				{
-					"id":"0x1234",
-					"location" : "cada",
-					"name" : "Kekname",
-				},
-			},
+		// Read the request body
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprint(w, "Failed to read request body")
+			return
 		}
 		
+		var userJson models.User
+		err = json.Unmarshal(body, &userJson)
+
 		// Create the user in Firestore
 		err = user.CreateUser(ctx, firestoreClient, userJson)
 		if err != nil {
@@ -143,7 +140,22 @@ func main() {
 		w.Write(data)
 	})
 
-	fmt.Printf("Starting HTTP server\nhttps://127.0.0.1:%s\n",*port)
-	http.ListenAndServe(fmt.Sprintf(":%s", *port), nil)
+	http.HandleFunc("/getAllFiles", func(w http.ResponseWriter, r *http.Request) {
 
+		files, err := file.GetAllFiles(ctx,firestoreClient)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Convert the file struct to JSON and write it to the response writer
+		data, err := json.Marshal(files)
+		if err != nil {
+			panic(err)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(data)
+	})
+
+	http.ListenAndServe(":80", nil)
 }

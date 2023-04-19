@@ -2,6 +2,7 @@ import 'package:file_cosmos/screens/map_screen/map_screen.dart';
 import 'package:file_cosmos/screens/upload_screen/upload_screen.dart';
 import 'package:file_cosmos/services/auth_service.dart';
 import 'package:file_cosmos/services/db_services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -15,7 +16,6 @@ class MainScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Future<void> _getPermission() async {
-
       final storagePermission = await Permission.storage.request();
       if (storagePermission.isDenied) {
         // The user opted to never again see the permission request dialog for this
@@ -53,17 +53,10 @@ class MainScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(
-            Icons.menu,
-            color: Color.fromARGB(255, 0, 0, 0),
-          ),
-          onPressed: () {},
-        ),
         centerTitle: true,
         backgroundColor: Colors.white,
         title: Text(
-          'File Transfer',
+          'FileCosmos',
           style: GoogleFonts.lato(
             color: Colors.purple,
             fontWeight: FontWeight.bold,
@@ -76,7 +69,7 @@ class MainScreen extends StatelessWidget {
               Icons.logout,
               color: Color.fromARGB(255, 0, 0, 0),
             ),
-            onPressed: () async{
+            onPressed: () async {
               await AuthService().signOut();
             },
           ),
@@ -91,11 +84,15 @@ class MainScreen extends StatelessWidget {
             }
 
             if (snapshot.hasError) {
-              return Center(child: Text(snapshot.error.toString()),);
+              return Center(
+                child: Text(snapshot.error.toString()),
+              );
             }
 
-            if(snapshot.connectionState == ConnectionState.waiting){
-              return const Center(child: CircularProgressIndicator(),);
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
             }
 
             return Padding(
@@ -104,13 +101,17 @@ class MainScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    width: double.infinity,
+                    width: 200,
                     height: 200,
-                    child: Image.network(
-                      'https://cdn3.vectorstock.com/i/1000x1000/30/97/flat-business-man-user-profile-avatar-icon-vector-4333097.jpg/400x200',
-                      // fit: BoxFit.cover,
-                      width: 200,
-                      height: 150,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      image: DecorationImage(
+                        image: NetworkImage(
+                          FirebaseAuth.instance.currentUser!.photoURL!,
+                        ),
+                        fit: BoxFit.cover,
+                      ),
+ 
                     ),
                   ),
                   Expanded(child: Container()),
@@ -236,26 +237,27 @@ class MainScreen extends StatelessWidget {
                         height: 130,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(10),
-                          image: const DecorationImage(
-                            image: NetworkImage(
-                                'https://cdn-icons-png.flaticon.com/512/854/854878.png'),
-                            fit: BoxFit.contain,
-                          ),
                         ),
-                        child: Align(
-                          alignment: Alignment.bottomCenter,
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: Text(
-                              'Map',
-                              style: GoogleFonts.lato(
-                                color: const Color.fromARGB(255, 4, 0, 4),
-                                fontWeight: FontWeight.bold,
-                                backgroundColor:
-                                    const Color.fromARGB(0, 254, 254, 254),
+                        child: Column(
+                          children: [
+                            Expanded(
+                              child: Image.network(
+                                'https://cdn-icons-png.flaticon.com/512/854/854878.png',
                               ),
                             ),
-                          ),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: Text(
+                                'Map',
+                                style: GoogleFonts.lato(
+                                  color: const Color.fromARGB(255, 4, 0, 4),
+                                  fontWeight: FontWeight.bold,
+                                  backgroundColor:
+                                      const Color.fromARGB(0, 254, 254, 254),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),

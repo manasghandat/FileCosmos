@@ -47,7 +47,7 @@ class DbService {
             'location': placemarks[0].subLocality,
           },
         );
-        FirestoreServices().updateUfiles({
+        await FirestoreServices().updateUfiles({
           'id': id,
           'name': s,
           'url': respStr,

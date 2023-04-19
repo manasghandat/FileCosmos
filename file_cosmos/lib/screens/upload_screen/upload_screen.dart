@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:dotted_border/dotted_border.dart';
 import 'package:file_cosmos/services/db_services.dart';
+import 'package:file_cosmos/services/firestore_service.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -104,7 +105,8 @@ class _UploadScreenState extends State<UploadScreen> {
                                             backgroundColor: Colors.black,
                                           ),
                                           onPressed: () async {
-                                            await _pickFiles(_titleController.text);
+                                            await _pickFiles(
+                                                _titleController.text);
                                             Navigator.pop(cont);
                                           },
                                           child: const Text(
@@ -151,91 +153,120 @@ class _UploadScreenState extends State<UploadScreen> {
               ),
               const SizedBox(height: 20),
               Expanded(
-                child: Container(
-                  child: ListView.builder(
-                    itemCount: 200,
-                    itemBuilder: (BuildContext context, int index) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Container(
-                          height: 43,
-                          padding: const EdgeInsets.only(left: 18),
-                          decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(
-                                color: Colors.grey.withOpacity(0.5),
-                                width: 1,
-                              ),
-                            ),
-                          ),
-                          alignment: Alignment.centerLeft,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: const [
-                                  Text(
-                                    'File Title',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      color: Color.fromARGB(255, 4, 4, 4),
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  Text(
-                                    'File location',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Color(0xFFbfbdbf),
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              IconButton(
-                                  onPressed: () {
-                                    // dialog for delete file
+                child: FutureBuilder<List<Map<String, dynamic>>>(
+                    future: FirestoreServices().getUfiles(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData &&
+                          snapshot.connectionState == ConnectionState.none) {
+                        return Container();
+                      }
 
-                                    showDialog(
-                                      context: context,
-                                      builder: (context) {
-                                        return AlertDialog(
-                                          title: const Text('Delete File'),
-                                          content: const Text(
-                                              'Are you sure you want to delete this file?',
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                              )),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.of(context).pop();
-                                              },
-                                              child: const Text('Cancel'),
-                                            ),
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.of(context).pop();
-                                              },
-                                              child: const Text('Delete'),
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    );
-                                  },
-                                  icon: const Icon(
-                                    Icons.delete,
-                                    color: Color.fromARGB(255, 255, 0, 0),
-                                  )),
-                            ],
-                          ),
+                      if(snapshot.connectionState == ConnectionState.waiting){
+                        return const Center(child: CircularProgressIndicator(),);
+                      }
+
+                      if(snapshot.hasError){
+                        return const Center(child: Text('Something went wrong'),);
+                      }
+
+                      if(snapshot.data!.isEmpty){
+                        return const Center(child: Text('No files uploaded'),);
+                      }
+
+                      final _data = snapshot.data;
+
+                      return Container(
+                        child: ListView.builder(
+                          itemCount: _data!.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 8.0),
+                              child: Container(
+                                height: 43,
+                                padding: const EdgeInsets.only(left: 18),
+                                decoration: BoxDecoration(
+                                  border: Border(
+                                    bottom: BorderSide(
+                                      color: Colors.grey.withOpacity(0.5),
+                                      width: 1,
+                                    ),
+                                  ),
+                                ),
+                                alignment: Alignment.centerLeft,
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children:  [
+                                        Text(
+                                          _data[index]['name'],
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            color: Color.fromARGB(255, 4, 4, 4),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        Text(
+                                          _data[index]['location'],
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            color: Color(0xFFbfbdbf),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    IconButton(
+                                        onPressed: () {
+                                          // dialog for delete file
+
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) {
+                                              return AlertDialog(
+                                                title:
+                                                    const Text('Delete File'),
+                                                content: const Text(
+                                                    'Are you sure you want to delete this file?',
+                                                    style: TextStyle(
+                                                      fontSize: 16,
+                                                    )),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      Navigator.of(context)
+                                                          .pop();
+                                                    },
+                                                    child: const Text('Cancel'),
+                                                  ),
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      Navigator.of(context)
+                                                          .pop();
+                                                    },
+                                                    child: const Text('Delete'),
+                                                  ),
+                                                ],
+                                              );
+                                            },
+                                          );
+                                        },
+                                        icon: const Icon(
+                                          Icons.delete,
+                                          color: Color.fromARGB(255, 255, 0, 0),
+                                        )),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       );
-                    },
-                  ),
-                ),
+                    }),
               ),
               const SizedBox(height: 20)
             ],
