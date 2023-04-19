@@ -38,6 +38,25 @@ class FirestoreServices {
     }
   }
 
+  // get uFile list of map in users
+  Future<List<Map<String, dynamic>>> getUfiles() async {
+    if (user != null) {
+      final doc = await _firestore.collection('users').doc(user!.uid).get();
+      return List<Map<String, dynamic>>.from(doc['Ufiles']);
+    }
+    return [];
+  }
+
+  // get dFile list of map in users
+
+  Future<List<Map<String, dynamic>>> getDfiles() async {
+    if (user != null) {
+      final doc = await _firestore.collection('users').doc(user!.uid).get();
+      return List<Map<String, dynamic>>.from(doc['Dfiles']);
+    }
+    return [];
+  }
+
   // createFile
 
   Future<String> addFile(Map<String, dynamic> data) async {

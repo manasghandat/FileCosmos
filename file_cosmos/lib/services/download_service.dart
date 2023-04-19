@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:open_file_plus/open_file_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 
@@ -35,6 +36,8 @@ class DownloadService {
       final fileName = '$user';
       final response =
           await Dio().download(downloadUrl, '$path/$fileName/$name');
+      
+      OpenFile.open('$path/$fileName/$name');
       print(response);
       // final file = File(savePath);
       // final sink = file.openWrite();

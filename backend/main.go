@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"io/ioutil"
 	"ooad/file"
 	"ooad/user"
 	"ooad/models"
-
 	firebase "firebase.google.com/go/v4"
 	"google.golang.org/api/option"
 	"cloud.google.com/go/storage"
@@ -49,6 +49,7 @@ func main() {
 		log.Fatalf("error getting Firestore client: %v", err)
 	}
 	defer firestoreClient.Close()
+	
 
 	fileClient, err := storage.NewClient(ctx,opt)
 	if err != nil {
@@ -59,16 +60,39 @@ func main() {
 	// Start the HTTP server to get files
 	http.HandleFunc("/getFile", func(w http.ResponseWriter, r *http.Request) {
 		
-		objectName := "rolf.txt"
+		// Read the request body
 
-		// Get the file from Firebase Storage
-		file, err := file.GetFile(ctx,fileClient,objectName)
+		body, err := ioutil.ReadAll(r.Body)
+				if err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					fmt.Fprint(w, "Failed to read request body")
+					return
+				}
+		
+		
+		// get a feild cord from body
+		var cordinate models.Cordinate
+		fmt.Print("body: ")
+		fmt.Println(body)
+		err = json.Unmarshal(body, &cordinate)
 		if err != nil {
-			panic(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		
+		files, err := file.GetFile(ctx, cordinate.Cord,firestoreClient)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
+		fmt.Println(files)
+
+
+
+
 		// Convert the file struct to JSON and write it to the response writer
-		data, err := json.Marshal(file)
+		data, err := json.Marshal(files)
 		if err != nil {
 			panic(err)
 		}
@@ -80,38 +104,51 @@ func main() {
 		filePath := "../kek.txt"
 		objectName := "rolf.txt"
 
-		err = file.UploadFile(ctx,fileClient,filePath,objectName)
-		if err!=nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "text/plain")
-		fmt.Fprintln(w, "File uploaded successfully")
+		s := file.UploadFile(w,r,ctx,fileClient,filePath,objectName)
+		// if err!=nil {
+		// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+		// 	return
+		// }
+		fmt.Println(s)
+		// w.Header().Set("Content-Type", "text/plain")
+		// fmt.Fprintln(w, "File uploaded successfully")
 	})
 
 	// Start the HTTP server to create a user
 	http.HandleFunc("/createUser", func(w http.ResponseWriter, r *http.Request) {
 		// Decode the request body into a User struct
-		userJson := models.User{
-			Name:  "Ak",
-			ID: "0X69",
-			Email: "kek@gmail.com",
-			Ufiles: []map[string]string{
-				{
-					"id":"0x1234",
-					"location" : "cada",
-					"name" : "Kekname",
-				},
-			},
-			Dfiles: []map[string]string{
-				{
-					"id":"0x1234",
-					"location" : "cada",
-					"name" : "Kekname",
-				},
-			},
-		}
+				// Read the request body
+				body, err := ioutil.ReadAll(r.Body)
+				if err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					fmt.Fprint(w, "Failed to read request body")
+					return
+				}
+				// print body
+			var userJson models.User
+			err = json.Unmarshal(body, &userJson)
+
+			fmt.Println(userJson)
+
+		// userJson := models.User{
+		// 	Name:  "Ak",
+		// 	ID: "0X69",
+		// 	Email: "kek@gmail.com",
+		// 	Ufiles: []map[string]string{
+		// 		{
+		// 			"id":"0x1234",
+		// 			"location" : "cada",
+		// 			"name" : "Kekname",
+		// 		},
+		// 	},
+		// 	Dfiles: []map[string]string{
+		// 		{
+		// 			"id":"0x1234",
+		// 			"location" : "cada",
+		// 			"name" : "Kekname",
+		// 		},
+		// 	},
+		// }
 		
 		// Create the user in Firestore
 		err = user.CreateUser(ctx, firestoreClient, userJson)
@@ -139,6 +176,33 @@ func main() {
 			panic(err)
 		}
 
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(data)
+	})
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "Hello World")
+	})
+	http.HandleFunc("/getAllFiles", func(w http.ResponseWriter, r *http.Request) {
+
+
+
+		files, err := file.GetAllFiles(ctx,firestoreClient)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		fmt.Println(files)
+
+
+
+
+		// Convert the file struct to JSON and write it to the response writer
+		data, err := json.Marshal(files)
+		if err != nil {
+			panic(err)
+		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(data)
 	})
