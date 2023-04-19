@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:file_cosmos/services/db_services.dart';
 import 'package:file_cosmos/services/download_service.dart';
+import 'package:file_cosmos/services/firestore_service.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -17,7 +18,7 @@ class ReceiveScreen extends StatefulWidget {
 }
 
 class _ReceiveScreenState extends State<ReceiveScreen> {
-  final LocationSettings locationSettings = LocationSettings(
+  final LocationSettings locationSettings = const LocationSettings(
     accuracy: LocationAccuracy.high,
     distanceFilter: 100,
   );
@@ -104,7 +105,7 @@ class _ReceiveScreenState extends State<ReceiveScreen> {
                       padding: const EdgeInsets.all(25),
                       width: 250,
                       height: 250,
-                      decoration: BoxDecoration(),
+                      decoration: const BoxDecoration(),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -167,30 +168,36 @@ class _ReceiveScreenState extends State<ReceiveScreen> {
                                             mainAxisAlignment:
                                                 MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    list[index].name,
-                                                    style: TextStyle(
-                                                      fontSize: 18,
-                                                      color: Color.fromARGB(
-                                                          255, 4, 4, 4),
-                                                      fontWeight:
-                                                          FontWeight.w500,
+                                              Container(
+                                                width: 150,
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      list[index].name,
+                                                      style: const TextStyle(
+                                                        fontSize: 18,
+                                                        color: Color.fromARGB(
+                                                            255, 4, 4, 4),
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
                                                     ),
-                                                  ),
-                                                  Text(
-                                                    list[index].location,
-                                                    style: TextStyle(
-                                                      fontSize: 14,
-                                                      color: Color(0xFFbfbdbf),
-                                                      fontWeight:
-                                                          FontWeight.w500,
+                                                    Text(
+                                                      list[index].location,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      style: const TextStyle(
+                                                        fontSize: 14,
+                                                        color:
+                                                            Color(0xFFbfbdbf),
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
                                                     ),
-                                                  ),
-                                                ],
+                                                  ],
+                                                ),
                                               ),
                                               IconButton(
                                                   onPressed: () {
@@ -219,9 +226,9 @@ class _ReceiveScreenState extends State<ReceiveScreen> {
                                                               onPressed:
                                                                   () async {
                                                                 await DownloadService()
-                                                                    .dFile(
-                                                                        list[index]
-                                                                            .url!);
+                                                                    .dFile(list[
+                                                                            index]
+                                                                        .url!);
                                                                 Navigator.of(
                                                                         context)
                                                                     .pop();
@@ -250,71 +257,88 @@ class _ReceiveScreenState extends State<ReceiveScreen> {
                       ));
                 }),
             const SizedBox(height: 56),
-            Stack(
-              alignment: Alignment.topLeft,
-              children: [
-                Text(
-                  'Recieved Files',
-                  style: TextStyle(
-                    color: Colors.grey.withOpacity(0.8),
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                    // alignment: LexicalFocusOrder,
-                  ),
-                ),
-              ],
+            Text(
+              'Recieved Files',
+              style: TextStyle(
+                color: Colors.grey.withOpacity(0.8),
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+                // alignment: LexicalFocusOrder,
+              ),
             ),
-            Container(
-              height: 100,
-              child: ListView.builder(
-                  padding: const EdgeInsets.all(10),
-                  itemCount: list.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    return Container(
-                      height: 60,
-                      // width: 40,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: const Color.fromARGB(255, 5, 157, 99),
-                          width: 2,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.all(5),
-                            child: Icon(
-                              Icons.insert_drive_file,
-                              color: Colors.purple,
-                              size: 35,
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.all(8),
-                            child: Column(children: [
-                              Text(
-                                list[index].name,
-                                style: GoogleFonts.lato(
-                                  color: const Color.fromARGB(255, 0, 0, 0),
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 18,
-                                ),
-                              ),
-                              Text(
-                                list[index].location,
-                                style: GoogleFonts.lato(
-                                  color: Color.fromARGB(125, 18, 17, 17),
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ]),
-                          ),
-                        ],
-                      ),
+            FutureBuilder<Object>(
+                future: FirestoreServices().getDfiles(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData &&
+                      snapshot.connectionState == ConnectionState.none) {
+                    return Container();
+                  }
+
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text(snapshot.error.toString()),
                     );
-                  }),
-            )
+                  }
+
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+                  return Container(
+                    height: 100,
+                    child: ListView.builder(
+                        padding: const EdgeInsets.all(10),
+                        itemCount: list.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          return Container(
+                            height: 60,
+                            // width: 40,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: const Color.fromARGB(255, 5, 157, 99),
+                                width: 2,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const Padding(
+                                  padding: EdgeInsets.all(5),
+                                  child: Icon(
+                                    Icons.insert_drive_file,
+                                    color: Colors.purple,
+                                    size: 35,
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(8),
+                                  child: Column(children: [
+                                    Text(
+                                      list[index].name,
+                                      style: GoogleFonts.lato(
+                                        color:
+                                            const Color.fromARGB(255, 0, 0, 0),
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                    Text(
+                                      list[index].location,
+                                      style: GoogleFonts.lato(
+                                        color: const Color.fromARGB(
+                                            125, 18, 17, 17),
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ]),
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
+                  );
+                })
           ],
         ),
       ),

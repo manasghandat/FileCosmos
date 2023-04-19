@@ -42,7 +42,8 @@ class FirestoreServices {
   Future<List<Map<String, dynamic>>> getUfiles() async {
     if (user != null) {
       final doc = await _firestore.collection('users').doc(user!.uid).get();
-      return List<Map<String, dynamic>>.from(doc['Ufiles']);
+      return List<Map<String, dynamic>>.from(doc.data()!['Ufiles']);
+
     }
     return [];
   }
@@ -52,11 +53,10 @@ class FirestoreServices {
   Future<List<Map<String, dynamic>>> getDfiles() async {
     if (user != null) {
       final doc = await _firestore.collection('users').doc(user!.uid).get();
-      return List<Map<String, dynamic>>.from(doc['Dfiles']);
+      return List<Map<String, dynamic>>.from(doc.data()!['Dfiles']);
     }
     return [];
   }
-
   // createFile
 
   Future<String> addFile(Map<String, dynamic> data) async {
@@ -67,4 +67,5 @@ class FirestoreServices {
     }
     return 'Error : User not logged in';
   }
+
 }
