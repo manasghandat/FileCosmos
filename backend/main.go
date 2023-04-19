@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -19,10 +18,6 @@ import (
 
 
 func main() {
-	// Parse command-line arguments
-	port := flag.String("p", "8080", "HTTP server port")
-	flag.Parse()
-
 	// Initialize the Firebase app
 	ctx := context.Background()
 	opt := option.WithCredentialsJSON([]byte(`{
@@ -38,6 +33,7 @@ func main() {
 		"client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-tzvgx%40location-based-file-sharing.iam.gserviceaccount.com"
 	  }
 	`))
+
 	app, err := firebase.NewApp(ctx, nil, opt)
 	if err != nil {
 		log.Fatalf("error initializing app: %v", err)
@@ -63,17 +59,15 @@ func main() {
 		// Read the request body
 
 		body, err := ioutil.ReadAll(r.Body)
-				if err != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-					fmt.Fprint(w, "Failed to read request body")
-					return
-				}
-		
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprint(w, "Failed to read request body")
+			return
+		}
 		
 		// get a feild cord from body
 		var cordinate models.Cordinate
-		fmt.Print("body: ")
-		fmt.Println(body)
+		
 		err = json.Unmarshal(body, &cordinate)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -88,9 +82,6 @@ func main() {
 
 		fmt.Println(files)
 
-
-
-
 		// Convert the file struct to JSON and write it to the response writer
 		data, err := json.Marshal(files)
 		if err != nil {
@@ -101,55 +92,24 @@ func main() {
 	})
 
 	http.HandleFunc("/uploadFile",func(w http.ResponseWriter, r *http.Request) {
-		filePath := "../kek.txt"
-		objectName := "rolf.txt"
-
-		s := file.UploadFile(w,r,ctx,fileClient,filePath,objectName)
-		// if err!=nil {
-		// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-		// 	return
-		// }
+		s := file.UploadFile(w,r,ctx,fileClient)
 		fmt.Println(s)
-		// w.Header().Set("Content-Type", "text/plain")
-		// fmt.Fprintln(w, "File uploaded successfully")
 	})
 
 	// Start the HTTP server to create a user
 	http.HandleFunc("/createUser", func(w http.ResponseWriter, r *http.Request) {
 		// Decode the request body into a User struct
-				// Read the request body
-				body, err := ioutil.ReadAll(r.Body)
-				if err != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-					fmt.Fprint(w, "Failed to read request body")
-					return
-				}
-				// print body
-			var userJson models.User
-			err = json.Unmarshal(body, &userJson)
-
-			fmt.Println(userJson)
-
-		// userJson := models.User{
-		// 	Name:  "Ak",
-		// 	ID: "0X69",
-		// 	Email: "kek@gmail.com",
-		// 	Ufiles: []map[string]string{
-		// 		{
-		// 			"id":"0x1234",
-		// 			"location" : "cada",
-		// 			"name" : "Kekname",
-		// 		},
-		// 	},
-		// 	Dfiles: []map[string]string{
-		// 		{
-		// 			"id":"0x1234",
-		// 			"location" : "cada",
-		// 			"name" : "Kekname",
-		// 		},
-		// 	},
-		// }
+		// Read the request body
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprint(w, "Failed to read request body")
+			return
+		}
 		
+		var userJson models.User
+		err = json.Unmarshal(body, &userJson)
+
 		// Create the user in Firestore
 		err = user.CreateUser(ctx, firestoreClient, userJson)
 		if err != nil {
@@ -180,23 +140,13 @@ func main() {
 		w.Write(data)
 	})
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "Hello World")
-	})
 	http.HandleFunc("/getAllFiles", func(w http.ResponseWriter, r *http.Request) {
-
-
 
 		files, err := file.GetAllFiles(ctx,firestoreClient)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-
-		fmt.Println(files)
-
-
-
 
 		// Convert the file struct to JSON and write it to the response writer
 		data, err := json.Marshal(files)
@@ -207,7 +157,5 @@ func main() {
 		w.Write(data)
 	})
 
-	fmt.Printf("Starting HTTP server\nhttps://127.0.0.1:%s\n",*port)
-	http.ListenAndServe(fmt.Sprintf(":%s", *port), nil)
-
+	http.ListenAndServe(":80", nil)
 }

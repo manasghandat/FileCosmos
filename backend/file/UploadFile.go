@@ -9,7 +9,7 @@ import (
 	"cloud.google.com/go/storage"
 )
 
-func UploadFile(w http.ResponseWriter, r *http.Request,ctx context.Context, client *storage.Client, filePath string, objectName string)(error){
+func UploadFile(w http.ResponseWriter, r *http.Request,ctx context.Context, client *storage.Client)(error){
 	bucketName := "location-based-file-sharing.appspot.com"
 	bucket := client.Bucket(bucketName)
 	
