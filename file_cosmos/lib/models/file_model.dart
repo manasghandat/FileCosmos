@@ -1,11 +1,13 @@
 class MyFile {
-  String id;
+  String? id;
   String name;
   String location;
   String coordinates;
+  String? url;
 
   MyFile({
-    required this.id,
+     this.id,
+     this.url,
     required this.name,
     required this.location,
     required this.coordinates,

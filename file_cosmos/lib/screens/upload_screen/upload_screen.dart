@@ -1,8 +1,11 @@
 import 'dart:collection';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:dotted_border/dotted_border.dart';
+import 'package:file_cosmos/services/db_services.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -16,22 +19,28 @@ class UploadScreen extends StatefulWidget {
 class _UploadScreenState extends State<UploadScreen> {
   bool _isLoading = false;
 
-  void _pickFiles() async {
+  Future<void> _pickFiles(String s) async {
     var _paths;
+    var _directoryPath = null;
     try {
-      var _directoryPath = null;
-      _paths = await FilePicker.platform.pickFiles(allowMultiple: false);
+      _paths = await FilePicker.platform
+          .pickFiles(allowMultiple: false)
+          .then((value) {
+        value!.files.forEach((element) {
+          _directoryPath = element.path;
+        });
+      });
     } on PlatformException catch (e) {
       print('Unsupported operation$e');
     } catch (e) {
       print(e.toString());
     }
     if (!mounted) return;
+    print('This path : $_directoryPath');
+    File _file = File(_directoryPath);
+    await DbService.uploadFile(s, _file);
     setState(() {
       _isLoading = false;
-      var _fileName =
-          _paths != null ? _paths!.map((e) => e.name).toString() : '...';
-      var _userAborted = _paths == null;
     });
   }
 
@@ -68,27 +77,61 @@ class _UploadScreenState extends State<UploadScreen> {
                     color: Colors.blue.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: _isLoading? const CircularProgressIndicator() : ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-
-                      _isLoading = true;
-                      });
-                      _pickFiles();
-                    },
-                    style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all<Color>(
-                        const Color.fromARGB(255, 31, 31, 31),
-                      ),
-                    ),
-                    child: const Text(
-                      'Upload file in your location',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Color.fromARGB(255, 255, 255, 255),
-                      ),
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator()
+                      : ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _isLoading = true;
+                            });
+                            showDialog(
+                                context: context,
+                                builder: (cont) {
+                                  // dialog for taking input of file title
+                                  final _titleController =
+                                      TextEditingController();
+                                  return Dialog(
+                                    child: Column(
+                                      children: [
+                                        TextField(
+                                          controller: _titleController,
+                                          decoration: const InputDecoration(
+                                            hintText: 'Enter file title',
+                                          ),
+                                        ),
+                                        ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.black,
+                                          ),
+                                          onPressed: () async {
+                                            await _pickFiles(_titleController.text);
+                                            Navigator.pop(cont);
+                                          },
+                                          child: const Text(
+                                            'Upload',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                });
+                          },
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all<Color>(
+                              const Color.fromARGB(255, 31, 31, 31),
+                            ),
+                          ),
+                          child: const Text(
+                            'Upload file in your location',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Color.fromARGB(255, 255, 255, 255),
+                            ),
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(

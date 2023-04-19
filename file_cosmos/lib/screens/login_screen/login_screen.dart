@@ -11,6 +11,9 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+
+  bool isLoading = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,9 +34,17 @@ class _LoginScreenState extends State<LoginScreen> {
           height: 100,
         ),
         Center(
-          child: InkWell(
+          child: isLoading ?
+          const CircularProgressIndicator() :
+           InkWell(
             onTap: () async {
-              final response = AuthService().signInWithGoogle();
+              setState(() {
+                isLoading = true;
+              });
+              final response = await  AuthService().signInWithGoogle();
+              setState(() {
+                isLoading = false;
+              });
               print(response);
             },
             child: Container(
