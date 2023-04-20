@@ -10,7 +10,7 @@ docker compose up -d --build
 ```
 
 If you dont have docker added as a group then try adding `sudo`.
-If you dont have docker installed on your system install it using the following commands or you can visit the official <a href = "https://docs.docker.com/engine/install/ubuntu/">docker</a> installation website.
+If you dont have docker installed on your system install it using the following commands or you can visit the official <a href = "https://docs.docker.com/engine/install/ubuntu/">docker installation </a> website.
 
 ```bash
 sudo apt-get remove docker docker-engine docker.io containerd runc
