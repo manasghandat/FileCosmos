@@ -9,7 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:firebase_storage/firebase_storage.dart';
 
 class DbService {
-  static const base_url = 'http://10.38.1.163:8080';
+  static const base_url = 'http://filecosmos.keksite.in';
 
   static Future<List<dynamic>> get(String path) async {
     var url = Uri.parse('$base_url/$path');
@@ -56,7 +56,7 @@ class DbService {
         });
         print('File uploaded successfully');
       } else {
-        print('Failed to upload file');
+        print('Failed to upload file response code: ${response.statusCode}');
       }
     } catch (e) {
       print("error in uploadFile: $e");
@@ -119,7 +119,7 @@ class DbService {
     );
 
     if (response.statusCode == 200) {
-      final respStr =  response.body;
+      final respStr = response.body;
       List<MyFile> list = [];
       final data = jsonDecode(respStr);
       for (var i = 0; i < data.length; i++) {
@@ -137,5 +137,28 @@ class DbService {
       print(response.reasonPhrase);
     }
     return [];
+  }
+
+  Future<List<MyFile>> getAllFiles() async {
+    //  HTTP get request
+    final http.Response response = await http.get(
+      Uri.parse('$base_url/getAllFiles'),
+    );
+
+    final respStr = response.body;
+    List<MyFile> list = [];
+    final data = jsonDecode(respStr);
+    print('hjudhslkfjshfjkhalkjgfdkajf');
+    for (var i = 0; i < data.length; i++) {
+      list.add(MyFile(
+        id: data[i]["id"],
+        coordinates: data[i]["latlong"],
+        location: data[i]["location"],
+        name: data[i]["name"],
+        url: data[i]["url"],
+      ));
+    }
+    print(list);
+    return list;
   }
 }

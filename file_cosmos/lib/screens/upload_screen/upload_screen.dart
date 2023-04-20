@@ -20,7 +20,9 @@ class UploadScreen extends StatefulWidget {
 class _UploadScreenState extends State<UploadScreen> {
   bool _isLoading = false;
 
-  Future<void> _pickFiles(String s) async {
+  File? _file;
+
+  Future<void> _pickFiles() async {
     var _paths;
     var _directoryPath = null;
     try {
@@ -38,11 +40,7 @@ class _UploadScreenState extends State<UploadScreen> {
     }
     if (!mounted) return;
     print('This path : $_directoryPath');
-    File _file = File(_directoryPath);
-    await DbService.uploadFile(s, _file);
-    setState(() {
-      _isLoading = false;
-    });
+    _file = File(_directoryPath);
   }
 
   @override
@@ -56,7 +54,7 @@ class _UploadScreenState extends State<UploadScreen> {
               Container(
                 alignment: Alignment.center,
                 child: const Text(
-                  'Upload Screen',
+                  'FileCosmos',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -81,45 +79,92 @@ class _UploadScreenState extends State<UploadScreen> {
                   child: _isLoading
                       ? const CircularProgressIndicator()
                       : ElevatedButton(
-                          onPressed: () {
+                          onPressed: () async {
                             setState(() {
                               _isLoading = true;
                             });
-                            showDialog(
+                            await _pickFiles().then((value) {
+                              showDialog(
                                 context: context,
                                 builder: (cont) {
+
+                                  bool loading = false;
                                   // dialog for taking input of file title
                                   final _titleController =
                                       TextEditingController();
-                                  return Dialog(
-                                    child: Column(
-                                      children: [
-                                        TextField(
-                                          controller: _titleController,
-                                          decoration: const InputDecoration(
-                                            hintText: 'Enter file title',
-                                          ),
-                                        ),
-                                        ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.black,
-                                          ),
-                                          onPressed: () async {
-                                            await _pickFiles(
-                                                _titleController.text);
-                                            Navigator.pop(cont);
-                                          },
-                                          child: const Text(
-                                            'Upload',
-                                            style: TextStyle(
-                                              color: Colors.white,
+                                  return StatefulBuilder(
+                                    builder: (context, setStat) {
+                                      return Dialog(
+                                        child: Container(
+                                          height: 200,
+                                          padding: const EdgeInsets.all(18),
+                                          child: Center(
+                                            child: loading?
+                                            const CircularProgressIndicator() :
+                                             Column(
+                                              children: [
+                                                const Text(
+                                                  'Name your file',
+                                                  style: TextStyle(
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                const SizedBox(
+                                                  height: 20,
+                                                ),
+                                                TextField(
+                                                  controller: _titleController,
+                                                  decoration: InputDecoration(
+                                                      hintText: 'Enter file title',
+                                                      border: OutlineInputBorder(
+                                                        borderSide:
+                                                            const BorderSide(
+                                                          color: Colors.black,
+                                                        ),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                                10),
+                                                      )),
+                                                ),
+                                                const Spacer(),
+                                                ElevatedButton(
+                                                  style: ElevatedButton.styleFrom(
+                                                    backgroundColor: Colors.black,
+                                                  ),
+                                                  onPressed: () async {
+                                                    setStat(() {
+                                                      loading = true;
+                                                    });
+                                                    await DbService.uploadFile(_titleController.text,
+                                                        _file!);
+                                                    setStat(() {
+                                                      loading = false;
+                                                    });
+                                                    setState(() {
+                                                      _isLoading = false;
+                                                    });
+                                                    Navigator.pop(cont);
+                                                  },
+                                                  child: const Text(
+                                                    'Upload',
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
                                         ),
-                                      ],
-                                    ),
+                                      );
+                                    }
                                   );
                                 });
+                            });
+                            setState(() {
+                              _isLoading = false;
+                            });
                           },
                           style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.all<Color>(
@@ -161,16 +206,22 @@ class _UploadScreenState extends State<UploadScreen> {
                         return Container();
                       }
 
-                      if(snapshot.connectionState == ConnectionState.waiting){
-                        return const Center(child: CircularProgressIndicator(),);
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: CircularProgressIndicator(),
+                        );
                       }
 
-                      if(snapshot.hasError){
-                        return const Center(child: Text('Something went wrong'),);
+                      if (snapshot.hasError) {
+                        return const Center(
+                          child: Text('Something went wrong'),
+                        );
                       }
 
-                      if(snapshot.data!.isEmpty){
-                        return const Center(child: Text('No files uploaded'),);
+                      if (snapshot.data!.isEmpty) {
+                        return const Center(
+                          child: Text('No files uploaded'),
+                        );
                       }
 
                       final _data = snapshot.data;
@@ -201,7 +252,7 @@ class _UploadScreenState extends State<UploadScreen> {
                                     Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
-                                      children:  [
+                                      children: [
                                         Text(
                                           _data[index]['name'],
                                           style: const TextStyle(
@@ -238,15 +289,21 @@ class _UploadScreenState extends State<UploadScreen> {
                                                 actions: [
                                                   TextButton(
                                                     onPressed: () {
+                                                      
                                                       Navigator.of(context)
                                                           .pop();
                                                     },
                                                     child: const Text('Cancel'),
                                                   ),
                                                   TextButton(
-                                                    onPressed: () {
-                                                      Navigator.of(context)
-                                                          .pop();
+                                                    onPressed: () async {
+                                                      await FirestoreServices()
+                                                          .deleteUfiles(
+                                                              _data[index])
+                                                          .then((value) =>
+                                                              Navigator.of(
+                                                                      context)
+                                                                  .pop());
                                                     },
                                                     child: const Text('Delete'),
                                                   ),

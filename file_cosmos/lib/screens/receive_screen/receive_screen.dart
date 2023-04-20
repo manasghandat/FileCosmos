@@ -36,9 +36,14 @@ class _ReceiveScreenState extends State<ReceiveScreen> {
         Geolocator.getPositionStream(locationSettings: locationSettings)
             .listen((Position? position) {
       // do what you want to do with the position here
+      position = position;
       print(' ${position!.latitude} , ${position.longitude}');
     });
   }
+
+  var rlist = <MyFile>[];
+  var dlist = <MyFile>[];
+  Position? position;
 
   @override
   Widget build(BuildContext context) {
@@ -63,9 +68,9 @@ class _ReceiveScreenState extends State<ReceiveScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         title: Text(
-          'File Transfer',
+          'FileCosmos',
           style: GoogleFonts.lato(
-            color: Colors.purple,
+            color: Colors.black,
             fontWeight: FontWeight.bold,
             fontSize: 24,
           ),
@@ -91,16 +96,10 @@ class _ReceiveScreenState extends State<ReceiveScreen> {
                       child: Text('Error: ${snapshot.error}'),
                     );
                   }
-
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
+                  if(snapshot.hasData){
+                    position = snapshot.data;
                   }
-
-                  final position = snapshot.data;
-                  print(position!.latitude);
-
+                  if(position != null){
                   return Container(
                       padding: const EdgeInsets.all(25),
                       width: 250,
@@ -121,14 +120,142 @@ class _ReceiveScreenState extends State<ReceiveScreen> {
                           Expanded(
                             child: FutureBuilder<List<MyFile>>(
                                 future: DbService().getFiles(
-                                    "${position.latitude},${position.longitude}"),
+                                    "${position!.latitude},${position!.longitude}"),
                                 builder: (context, snapshot) {
                                   if (!snapshot.hasData &&
                                       snapshot.connectionState ==
                                           ConnectionState.none) {
                                     return Container();
                                   }
-
+                                  if (snapshot.data != null) {
+                                    rlist = snapshot.data!.length > rlist.length
+                                        ? snapshot.data!
+                                        : rlist;
+                                  }
+                                  if (rlist.length > 0) {
+                                    return ListView.builder(
+                                      itemCount: rlist.length,
+                                      itemBuilder: (context, index) {
+                                        return Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 8.0),
+                                          child: Container(
+                                            height: 43,
+                                            padding:
+                                                const EdgeInsets.only(left: 18),
+                                            decoration: BoxDecoration(
+                                              border: Border(
+                                                bottom: BorderSide(
+                                                  color: Colors.grey
+                                                      .withOpacity(0.5),
+                                                  width: 1,
+                                                ),
+                                              ),
+                                            ),
+                                            alignment: Alignment.centerLeft,
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Container(
+                                                  width: 150,
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        rlist[index].name,
+                                                        style: const TextStyle(
+                                                          fontSize: 18,
+                                                          color: Color.fromARGB(
+                                                              255, 4, 4, 4),
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        rlist[index].location,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        style: const TextStyle(
+                                                          fontSize: 14,
+                                                          color:
+                                                              Color(0xFFbfbdbf),
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                IconButton(
+                                                    onPressed: () {
+                                                      showDialog(
+                                                        context: context,
+                                                        builder: (context) {
+                                                          return AlertDialog(
+                                                            title: const Text(
+                                                                'Download File'),
+                                                            content: const Text(
+                                                                'Are you sure you want to download this file?',
+                                                                style:
+                                                                    TextStyle(
+                                                                  fontSize: 16,
+                                                                )),
+                                                            actions: [
+                                                              TextButton(
+                                                                onPressed: () {
+                                                                  Navigator.of(
+                                                                          context)
+                                                                      .pop();
+                                                                },
+                                                                child: const Text(
+                                                                    'Cancel'),
+                                                              ),
+                                                              TextButton(
+                                                                onPressed:
+                                                                    () async {
+                                                                  await DownloadService()
+                                                                      .dFile(
+                                                                          rlist[index]
+                                                                              .url!,
+                                                                          rlist[
+                                                                              index])
+                                                                      .then(
+                                                                          (value) {
+                                                                    ScaffoldMessenger.of(
+                                                                            context)
+                                                                        .showSnackBar(
+                                                                            const SnackBar(
+                                                                      content: Text(
+                                                                          'File Downloaded'),
+                                                                    ));
+                                                                    Navigator.of(
+                                                                            context)
+                                                                        .pop();
+                                                                  });
+                                                                },
+                                                                child: const Text(
+                                                                    'Download'),
+                                                              ),
+                                                            ],
+                                                          );
+                                                        },
+                                                      );
+                                                    },
+                                                    icon: const Icon(
+                                                      Icons.get_app,
+                                                      color: Color(0xFFbfbdbf),
+                                                    )),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  }
                                   if (snapshot.hasError) {
                                     return Center(
                                       child: Text('Error: ${snapshot.error}'),
@@ -142,119 +269,17 @@ class _ReceiveScreenState extends State<ReceiveScreen> {
                                     );
                                   }
 
-                                  final list = snapshot.data;
-
-                                  return ListView.builder(
-                                    itemCount: list!.length,
-                                    itemBuilder: (context, index) {
-                                      return Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 8.0),
-                                        child: Container(
-                                          height: 43,
-                                          padding:
-                                              const EdgeInsets.only(left: 18),
-                                          decoration: BoxDecoration(
-                                            border: Border(
-                                              bottom: BorderSide(
-                                                color: Colors.grey
-                                                    .withOpacity(0.5),
-                                                width: 1,
-                                              ),
-                                            ),
-                                          ),
-                                          alignment: Alignment.centerLeft,
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Container(
-                                                width: 150,
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      list[index].name,
-                                                      style: const TextStyle(
-                                                        fontSize: 18,
-                                                        color: Color.fromARGB(
-                                                            255, 4, 4, 4),
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                      ),
-                                                    ),
-                                                    Text(
-                                                      list[index].location,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                      style: const TextStyle(
-                                                        fontSize: 14,
-                                                        color:
-                                                            Color(0xFFbfbdbf),
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              IconButton(
-                                                  onPressed: () {
-                                                    showDialog(
-                                                      context: context,
-                                                      builder: (context) {
-                                                        return AlertDialog(
-                                                          title: const Text(
-                                                              'Download File'),
-                                                          content: const Text(
-                                                              'Are you sure you want to download this file?',
-                                                              style: TextStyle(
-                                                                fontSize: 16,
-                                                              )),
-                                                          actions: [
-                                                            TextButton(
-                                                              onPressed: () {
-                                                                Navigator.of(
-                                                                        context)
-                                                                    .pop();
-                                                              },
-                                                              child: const Text(
-                                                                  'Cancel'),
-                                                            ),
-                                                            TextButton(
-                                                              onPressed:
-                                                                  () async {
-                                                                await DownloadService()
-                                                                    .dFile(list[
-                                                                            index]
-                                                                        .url!);
-                                                                Navigator.of(
-                                                                        context)
-                                                                    .pop();
-                                                              },
-                                                              child: const Text(
-                                                                  'Download'),
-                                                            ),
-                                                          ],
-                                                        );
-                                                      },
-                                                    );
-                                                  },
-                                                  icon: const Icon(
-                                                    Icons.get_app,
-                                                    color: Color(0xFFbfbdbf),
-                                                  )),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  );
+                                  return Container();
                                 }),
                           )
                         ],
                       ));
+                  }
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                  
+                  
                 }),
             const SizedBox(height: 56),
             Text(
@@ -266,79 +291,98 @@ class _ReceiveScreenState extends State<ReceiveScreen> {
                 // alignment: LexicalFocusOrder,
               ),
             ),
-            FutureBuilder<Object>(
-                future: FirestoreServices().getDfiles(),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData &&
-                      snapshot.connectionState == ConnectionState.none) {
-                    return Container();
-                  }
+            Expanded(
+              child: FutureBuilder<List<Map<String, dynamic>>>(
+                  future: FirestoreServices().getDfiles(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData &&
+                        snapshot.connectionState == ConnectionState.none) {
+                      return Container();
+                    }
 
-                  if (snapshot.hasError) {
-                    return Center(
-                      child: Text(snapshot.error.toString()),
-                    );
-                  }
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Text(snapshot.error.toString()),
+                      );
+                    }
 
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  }
-                  return Container(
-                    height: 100,
-                    child: ListView.builder(
-                        padding: const EdgeInsets.all(10),
-                        itemCount: list.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          return Container(
-                            height: 60,
-                            // width: 40,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: const Color.fromARGB(255, 5, 157, 99),
-                                width: 2,
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                    if (snapshot.data != null) {
+                      if (snapshot.data!.length > dlist.length) {
+                        final temp = snapshot.data!
+                            .map((e) => MyFile(
+                                  coordinates: e['latlong'],
+                                  location: e['location'],
+                                  name: e['name'],
+                                  url: e['url'],
+                                  id: e['id'],
+                                ))
+                            .toList();
+                        dlist = temp;
+                      }
+                    }
+                    return Container(
+                      child: ListView.builder(
+                          padding: const EdgeInsets.all(10),
+                          itemCount: dlist.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return Container(
+                              height: 60,
+                              // width: 40,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: const Color.fromARGB(255, 5, 157, 99),
+                                  width: 2,
+                                ),
                               ),
-                            ),
-                            child: Row(
-                              children: [
-                                const Padding(
-                                  padding: EdgeInsets.all(5),
-                                  child: Icon(
-                                    Icons.insert_drive_file,
-                                    color: Colors.purple,
-                                    size: 35,
+                              child: Row(
+                                children: [
+                                  const Padding(
+                                    padding: EdgeInsets.all(5),
+                                    child: Icon(
+                                      Icons.insert_drive_file,
+                                      color: Colors.purple,
+                                      size: 35,
+                                    ),
                                   ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(8),
-                                  child: Column(children: [
-                                    Text(
-                                      list[index].name,
-                                      style: GoogleFonts.lato(
-                                        color:
-                                            const Color.fromARGB(255, 0, 0, 0),
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 18,
-                                      ),
-                                    ),
-                                    Text(
-                                      list[index].location,
-                                      style: GoogleFonts.lato(
-                                        color: const Color.fromARGB(
-                                            125, 18, 17, 17),
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ]),
-                                ),
-                              ],
-                            ),
-                          );
-                        }),
-                  );
-                })
+                                  Padding(
+                                    padding: const EdgeInsets.all(8),
+                                    child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            dlist[index].name,
+                                            style: GoogleFonts.lato(
+                                              color: const Color.fromARGB(
+                                                  255, 0, 0, 0),
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 18,
+                                            ),
+                                          ),
+                                          Text(
+                                            dlist[index].location,
+                                            style: GoogleFonts.lato(
+                                              color: const Color.fromARGB(
+                                                  125, 18, 17, 17),
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ]),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+                    );
+                  }),
+            ),
+            const SizedBox(height: 56),
           ],
         ),
       ),

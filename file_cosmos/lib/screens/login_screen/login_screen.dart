@@ -45,7 +45,6 @@ class _LoginScreenState extends State<LoginScreen> {
               setState(() {
                 isLoading = false;
               });
-              print(response);
             },
             child: Container(
               height: 50,

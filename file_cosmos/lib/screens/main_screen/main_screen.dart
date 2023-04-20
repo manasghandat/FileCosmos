@@ -58,7 +58,7 @@ class MainScreen extends StatelessWidget {
         title: Text(
           'FileCosmos',
           style: GoogleFonts.lato(
-            color: Colors.purple,
+            color: Colors.black,
             fontWeight: FontWeight.bold,
             backgroundColor: Colors.transparent,
           ),
@@ -140,27 +140,26 @@ class MainScreen extends StatelessWidget {
                             height: 130,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(10),
-                              image: const DecorationImage(
-                                image: NetworkImage(
-                                    'https://www.shutterstock.com/image-vector/download-icon-black-simple-design-260nw-1715072377.jpg'),
-                                fit: BoxFit.fill,
-                                // height:50,
-                              ),
                             ),
-                            child: Align(
-                              alignment: Alignment.bottomCenter,
-                              child: Padding(
-                                padding: const EdgeInsets.only(bottom: 10),
-                                child: Text(
-                                  'Receive',
-                                  style: GoogleFonts.lato(
-                                    color: const Color.fromARGB(255, 4, 0, 4),
-                                    fontWeight: FontWeight.bold,
-                                    backgroundColor:
-                                        const Color.fromARGB(0, 254, 254, 254),
+                            child: Column(
+                              children: [
+                                Expanded(
+                                  child: Image.asset(
+                                    'assets/images/receive.png',),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 10),
+                                  child: Text(
+                                    'Receive',
+                                    style: GoogleFonts.lato(
+                                      color: const Color.fromARGB(255, 4, 0, 4),
+                                      fontWeight: FontWeight.bold,
+                                      backgroundColor:
+                                          const Color.fromARGB(0, 254, 254, 254),
+                                    ),
                                   ),
                                 ),
-                              ),
+                              ],
                             ),
                           ),
                         ),
@@ -188,26 +187,27 @@ class MainScreen extends StatelessWidget {
                             height: 130,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(10),
-                              image: const DecorationImage(
-                                image: NetworkImage(
-                                    'https://www.shutterstock.com/image-vector/simple-mail-envelope-vector-design-260nw-1402243772.jpg'),
-                                fit: BoxFit.fill,
-                              ),
                             ),
-                            child: Align(
-                              alignment: Alignment.bottomCenter,
-                              child: Padding(
-                                padding: const EdgeInsets.only(bottom: 10),
-                                child: Text(
-                                  'Send',
-                                  style: GoogleFonts.lato(
-                                    color: const Color.fromARGB(255, 4, 0, 4),
-                                    fontWeight: FontWeight.bold,
-                                    backgroundColor:
-                                        const Color.fromARGB(0, 254, 254, 254),
+                            child: Column(
+                              children: [
+                                Expanded(
+                                  child: Image.asset(
+                                    'assets/images/send.png',
                                   ),
                                 ),
-                              ),
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 10),
+                                  child: Text(
+                                    'Send',
+                                    style: GoogleFonts.lato(
+                                      color: const Color.fromARGB(255, 4, 0, 4),
+                                      fontWeight: FontWeight.bold,
+                                      backgroundColor:
+                                          const Color.fromARGB(0, 254, 254, 254),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),

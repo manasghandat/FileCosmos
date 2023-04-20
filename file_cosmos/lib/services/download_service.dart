@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:file_cosmos/models/file_model.dart';
+import 'package:file_cosmos/services/firestore_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 import 'package:path_provider/path_provider.dart';
@@ -22,7 +24,7 @@ class DownloadService {
   //   }
   // }
 
-  Future<void> dFile(String downloadUrl) async {
+  Future<void> dFile(String downloadUrl,MyFile mf) async {
     try {
       final name = downloadUrl.split('?').first.split('/').last;
 
@@ -36,7 +38,14 @@ class DownloadService {
       final fileName = '$user';
       final response =
           await Dio().download(downloadUrl, '$path/$fileName/$name');
-      
+      await FirestoreServices().updateDfiles({
+        'id': mf.id,
+        'name': mf.name,
+        'url': mf.url,
+        'latlong': mf.coordinates,
+        'location': mf.location,
+      });
+
       OpenFile.open('$path/$fileName/$name');
       print(response);
       // final file = File(savePath);
